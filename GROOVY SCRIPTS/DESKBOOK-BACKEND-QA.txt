@@ -1,0 +1,43 @@
+pipeline {
+   agent { 
+        node { label "Intern-Node" } 
+    }
+    stages {
+        stage('Clone') {
+            steps {
+               checkout([$class: 'GitSCM', branches: [[name: '*/QA']],userRemoteConfigs: [[credentialsId: '68f1a4ac-9c08-4901-9af4-b76f03961ca3', url: 'https://1gitlab.1rivet.com/1Rivet/deskbook-service.git']]])
+            }
+        }
+        stage('Restore & Build'){
+            steps {
+                bat "dotnet restore"
+                bat "dotnet build"
+            }
+        }
+        stage('Publish'){
+            steps {
+                bat "dotnet publish"
+            }
+        }
+        stage('Archive publish Folder'){
+            steps{
+                script{
+                    zip zipFile: "${JOB_BASE_NAME}-${BUILD_TIMESTAMP}.zip", dir: "\\src\\DeskBook.API\\bin\\Debug\\net7.0\\publish\\"
+                }
+            }
+        }
+        stage('Nexus Upload') {
+            steps {
+                nexusArtifactUploader artifacts: [[artifactId: '${JOB_BASE_NAME}', classifier: "${BUILD_TIMESTAMP}", file: '${JOB_BASE_NAME}-${BUILD_TIMESTAMP}.zip', type: 'zip']], credentialsId: 'NEXUS', groupId: 'deskbook_backend_QA', nexusUrl: '103.249.120.58:8081', nexusVersion: 'nexus3', protocol: 'http', repository: 'Deskbook', version: '${BUILD_TIMESTAMP}'
+            }
+        }
+        stage('Ansible-playbook run') {
+            agent {
+                node { label "Intern_Ubuntu" } 
+            }
+            steps {
+                sh "ansible-playbook /etc/ansible/Ansible-playbook/deskbook-backend-qa.yml"
+            }
+        }
+    }
+}

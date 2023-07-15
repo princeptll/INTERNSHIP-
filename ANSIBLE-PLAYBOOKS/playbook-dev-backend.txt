@@ -1,0 +1,62 @@
+---
+- hosts: win
+
+  tasks:
+  - name: latest fetch from artifact
+    win_get_url:
+      url: http://103.249.120.58:8081/service/rest/v1/search/assets/download?sort=version&repository=Deskbook&group=deskbook_backend&name=DeskBook-BackEnd
+      dest: C:\Deskbook\deskbook-backend.zip
+
+  - name: stop site
+    win_iis_website:
+      name: "deskbook-backend-dev"
+      state: stopped
+
+
+  - name: stop an application pool
+    win_iis_webapppool:
+      name: "deskbook-backend-dev"
+      state: stopped
+
+#  - name: restart an application pool
+#    win_iis_webapppool:
+#      name: "deskbook-backend-dev"
+#      state: restarted
+
+  - name: delete directory
+    win_file:
+      path: C:\inetpub\wwwroot\deskbook-backend-dev
+      state: absent
+
+  - name: create directory
+    win_file:
+      path: C:\inetpub\wwwroot\deskbook-backend-dev
+      state: directory
+
+#  - name: Copy
+#     win_copy:
+#      src: C:\Deskbook\Deskbook-Jan\webconfig\web.config
+#      dest: C:\inetpub\wwwroot\deskbook-backend-dev\
+#      remote_src: true
+
+  - name: unzip
+    win_unzip:
+      src: C:\Deskbook\deskbook-backend.zip
+      dest: C:\inetpub\wwwroot\deskbook-backend-dev\
+
+  - name: Copy
+    win_copy:
+      src: C:\Deskbook\Deskbook-Jan\webconfig\web.config
+      dest: C:\inetpub\wwwroot\deskbook-backend-dev\
+      remote_src: true
+
+  - name: restart application pool
+    win_iis_webapppool:
+      name: "deskbook-backend-dev"
+      state: restarted
+
+  - name: restart site
+    win_iis_website:
+      name: "deskbook-backend-dev"
+      state: restarted
+      physical_path: "C:\\inetpub\\wwwroot\\deskbook-backend-dev"

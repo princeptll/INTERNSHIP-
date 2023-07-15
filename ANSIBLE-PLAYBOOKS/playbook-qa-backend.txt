@@ -1,0 +1,73 @@
+---
+- hosts: win
+
+  tasks:
+  - name: latest fetch from artifact
+    win_get_url:
+      url: http://103.249.120.58:8081/service/rest/v1/search/assets/download?sort=version&repository=Deskbook&group=deskbook_backend_QA&name=DeskBook-BackEnd-QA
+      dest: C:\Deskbook\deskbook-backend-QA.zip
+
+  - name: stop site
+    win_iis_website:
+      name: "deskbook-backend-QA"
+      state: stopped
+
+#  - name: restart an application pool
+#    win_iis_webapppool:
+#      name: "deskbook-backend-QA"
+#      state: restarted
+
+  - name: stop an application pool
+    win_iis_webapppool:
+      name: "deskbook-backend-QA"
+      state: stopped
+
+  - name: delete directory
+    win_file:
+      path: C:\inetpub\wwwroot\deskbook-backend-QA
+      state: absent
+
+  - name: create directory
+    win_file:
+      path: C:\inetpub\wwwroot\deskbook-backend-QA
+      state: directory
+
+  - name: unzip
+    win_unzip:
+      src: C:\Deskbook\deskbook-backend-QA.zip
+      dest: C:\inetpub\wwwroot\deskbook-backend-QA\
+
+  - name: Copy webconfig
+    win_copy:
+      src: C:\Deskbook\Deskbook-Jan\webconfig\web.config
+      dest: C:\inetpub\wwwroot\deskbook-backend-QA\
+      remote_src: true
+
+  - name: Copy appsetting
+    win_copy:
+      src: C:\Deskbook\Deskbook-Jan\appsettings.Development.json
+      dest: C:\inetpub\wwwroot\deskbook-backend-QA\
+      remote_src: true
+
+  - name: Copy appsettings
+    win_copy:
+      src: C:\Deskbook\Deskbook-Jan\appsettings.json
+      dest: C:\inetpub\wwwroot\deskbook-backend-QA\
+      remote_src: true
+
+  - name: Copy appsettings qa
+    win_copy:
+      src: C:\Deskbook\Deskbook-Jan\appsettings.QA.json
+      dest: C:\inetpub\wwwroot\deskbook-backend-QA\
+      remote_src: true
+
+  - name: restart application pool
+    win_iis_webapppool:
+      name: "deskbook-backend-QA"
+      state: restarted
+
+  - name: restart site
+    win_iis_website:
+      name: "deskbook-backend-QA"
+      state: restarted
+      physical_path: "C:\\inetpub\\wwwroot\\deskbook-backend-QA"

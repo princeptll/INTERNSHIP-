@@ -1,0 +1,38 @@
+pipeline { 
+    agent { 
+        node { label "Intern-Node" } 
+    }
+    stages{
+        stage('Windows files Cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Checkout') {
+            steps { 
+         checkout([$class: 'GitSCM', branches: [[name: '*/develop']],userRemoteConfigs: [[credentialsId: '68f1a4ac-9c08-4901-9af4-b76f03961ca3', url: 'https://1gitlab.1rivet.com/1Rivet/deskbook-java-service.git']]])
+            }
+       }
+        stage('Maven Install'){
+           steps { 
+             bat 'mvn clean install'
+             }
+        }
+        stage('Move File') {
+            steps {
+            bat 'move /Y C:\\jenkins_workspace\\workspace\\DeskBook\\deskbook_java\\target\\deskbook-user-services-0.0.1-SNAPSHOT.jar C:\\jenkins_workspace\\workspace\\DeskBook\\deskbook_java\\'
+            bat "dir"
+            }
+        }
+
+        
+        
+       stage('Nexus Upload Artifact') {
+            steps {
+               nexusArtifactUploader artifacts: [[artifactId: 'deskbook-user-services-0.0.1-SNAPSHOT.jar', classifier: "${BUILD_TIMESTAMP}", file: 'deskbook-user-services-0.0.1-SNAPSHOT.jar', type: 'jar']], credentialsId: 'NEXUS', groupId: 'Deskbook_Java_Service', nexusUrl: '103.249.120.58:8081', nexusVersion: 'nexus3', protocol: 'http', repository: 'Deskbook', version: '${BUILD_TIMESTAMP}'
+            }
+        }   
+
+    }
+}
+    

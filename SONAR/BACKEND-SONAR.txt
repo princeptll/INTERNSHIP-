@@ -1,0 +1,27 @@
+BACKEND-SONAR:
+pipeline {
+    agent {
+        node { label "princenode" }
+    }
+   
+    stages {
+        stage('Clone') {
+            steps {
+               checkout([$class: 'GitSCM', branches: [[name: '*/QA']],userRemoteConfigs: [[credentialsId: '68f1a4ac-9c08-4901-9af4-b76f03961ca3', url: 'https://1gitlab.1rivet.com/1Rivet/deskbook-service.git']]])
+            }
+        }
+      stage('SonarQube Analysis') {
+            steps {
+               
+                    // Execute the SonarQube scanner command
+                  bat 'dotnet sonarscanner begin /k:"deskbook-backend" /d:sonar.host.url="http://123.201.81.59:9000" /d:sonar.login=deskbok /d:sonar.password=deskbook@123'
+                  bat 'dotnet build'
+                  bat 'dotnet sonarscanner end  /d:sonar.login=deskbok /d:sonar.password=deskbook@123'
+                }
+            }
+       
+        }
+    }    
+
+
+

@@ -1,0 +1,29 @@
+JAVA-SONAR:
+pipeline {
+    agent {
+        node { label "princenode" }
+    }
+    stages{
+        stage('Windows files Cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
+         stage('Checkout') {
+            steps {
+         checkout([$class: 'GitSCM', branches: [[name: '*/QA']],userRemoteConfigs: [[credentialsId: '68f1a4ac-9c08-4901-9af4-b76f03961ca3', url: 'https://1gitlab.1rivet.com/1Rivet/deskbook-java-service.git']]])
+            }
+       }
+     stage('SonarQube Analysis') {
+            steps {
+               
+                    // Execute the SonarQube scanner command
+                    bat 'mvn clean verify sonar:sonar \
+                        -Dsonar.projectKey=deskbook-java \
+                        -Dsonar.host.url=http://123.201.81.59:9000 \
+                        -Dsonar.login=deskbok -Dsonar.password=deskbook@123'
+                }
+            }
+       
+        }
+    }

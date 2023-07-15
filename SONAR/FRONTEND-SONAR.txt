@@ -1,0 +1,32 @@
+FRONTEND-SONAR:
+pipeline {
+    agent {
+        node { label "princenode" }
+    }
+    stages{
+        stage('Windows files Cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
+        stage('Checkout') {
+            steps {
+         checkout([$class: 'GitSCM', branches: [[name: '*/QA']],userRemoteConfigs: [[credentialsId: 'd651a951-76d0-4709-ba8b-e54b94768b7a', url: 'https://1gitlab.1rivet.com/1Rivet/deskbook-frontend.git']]])
+            }
+       }
+        // stage('Npm Install'){
+        //   steps {
+        //      bat 'npm install'
+        //      }
+        // }
+       
+     stage('SonarQube Analysis') {
+            steps {
+               
+                    // Execute the SonarQube scanner command
+                    bat 'sonar-scanner.bat -D"sonar.projectKey=deskbook-frontend" -D"sonar.sources=." -D"sonar.host.url=http://123.201.81.59:9000" -D"sonar.login=deskbok" -D"sonar.password=deskbook@123"'
+                }
+            }
+       
+        }
+    }

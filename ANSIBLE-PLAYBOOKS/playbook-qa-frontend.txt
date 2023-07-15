@@ -1,0 +1,39 @@
+---
+- hosts: win
+
+  tasks:
+  - name: latest fetch from artifact
+    win_get_url:
+      url: http://103.249.120.58:8081/service/rest/v1/search/assets/download?sort=version&repository=Deskbook&group=deskbook_frontend-QA&name=DeskBook-FrontEnd-QA
+      dest: C:\Deskbook\deskbook-FrontEnd-QA.zip
+
+  - name: stop site
+    win_iis_website:
+      name: "deskbook-frontend-QA"
+      state: stopped
+
+  - name: delete directory
+    win_file:
+      path: C:\inetpub\wwwroot\deskbook-frontend-QA
+      state: absent
+
+  - name: create directory
+    win_file:
+      path: C:\inetpub\wwwroot\deskbook-frontend-QA
+      state: directory
+
+  - name: unzip
+    win_unzip:
+      src: C:\Deskbook\deskbook-frontend-QA.zip
+      dest: C:\inetpub\wwwroot\deskbook-frontend-QA\
+
+  - name: copy
+    win_copy:
+      src: /etc/ansible/Ansible-playbook/web.config
+      dest: C:\inetpub\wwwroot\deskbook-frontend-QA\
+
+  - name: restart site
+    win_iis_website:
+      name: "deskbook-frontend-QA"
+      state: restarted
+      physical_path: "C:\\inetpub\\wwwroot\\deskbook-frontend-QA"
